@@ -20,7 +20,6 @@ func BuildApplication() (*Application, error) {
 		transactions.NewController,
 
 		initializers.InitializeTonClient,
-		initializers.InitializeTonClientKey,
 		initializers.InitializeTonClientOpts,
 
 		initializers.InitializeLogs,

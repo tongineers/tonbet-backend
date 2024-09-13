@@ -32,8 +32,5 @@ deps:
 swagger:
 	swag init --pd -g cmd/app/main.go
 
-proto:
-	protoc --go_out=plugins=grpc:. internal/grpc/schema/*.proto
-
 install-tools:
 	@ cat tools/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %

@@ -12,10 +12,6 @@ type Config struct {
 
 	TONLibConfigPath   string `env:"TONLIB_CONFIG_PATH,required"`
 	TONContractAddress string `env:"TON_CONTRACT_ADDR,required"`
-
-	PublicKey   string `env:"PUBLIC_KEY,required"`
-	SecretKey   string `env:"SECRET_KEY,required"`
-	KeyPassword string `env:"KEY_PASSWORD,required"`
 }
 
 func LoadConfig() *Config {

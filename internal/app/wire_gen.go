@@ -22,9 +22,8 @@ func BuildApplication() (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	inputKey := initializers.InitializeTonClientKey(configConfig)
 	logger := initializers.InitializeLogs()
-	v := initializers.InitializeTonClientOpts(client, inputKey, configConfig, logger)
+	v := initializers.InitializeTonClientOpts(client, configConfig, logger)
 	service, err := tonapi.New(v...)
 	if err != nil {
 		return nil, err
@@ -34,7 +33,6 @@ func BuildApplication() (*Application, error) {
 		Service:      service,
 		Transactions: controller,
 		Client:       client,
-		Key:          inputKey,
 		Config:       configConfig,
 		Logger:       logger,
 	}
@@ -48,7 +46,6 @@ func BuildApplication() (*Application, error) {
 		Service:      service,
 		Transactions: controller,
 		Client:       client,
-		Key:          inputKey,
 		Config:       configConfig,
 		Logger:       logger,
 	}

@@ -1,6 +1,7 @@
 package tonapi
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 
@@ -13,6 +14,10 @@ import (
 
 var (
 	_ transactions.TONClient = (*Service)(nil)
+)
+
+const (
+	InputKeyRegular = "inputKeyRegular"
 )
 
 type (
@@ -29,12 +34,6 @@ type (
 func WithClient(c *tonlib.Client) Opt {
 	return func(s *Service) {
 		s.client = c
-	}
-}
-
-func WithKey(k *tonlib.InputKey) Opt {
-	return func(s *Service) {
-		s.key = k
 	}
 }
 
@@ -59,6 +58,27 @@ func (s *Service) apply(opts ...Opt) {
 func New(opts ...Opt) (*Service, error) {
 	s := &Service{}
 	s.apply(opts...)
+
+	// prepare data
+	loc := tonlib.SecureBytes("loc_pass")
+	mem := tonlib.SecureBytes("mem_pass")
+	seed := tonlib.SecureBytes("")
+
+	// create new key
+	pKey, err := s.client.CreateNewKey(loc, mem, seed)
+	if err != nil {
+		panic(err)
+	}
+
+	// set service key
+	s.key = &tonlib.InputKey{
+		Type:          InputKeyRegular,
+		LocalPassword: base64.StdEncoding.EncodeToString(loc),
+		Key: tonlib.TONPrivateKey{
+			PublicKey: pKey.PublicKey,
+			Secret:    base64.StdEncoding.EncodeToString([]byte(pKey.Secret)),
+		},
+	}
 
 	return s, nil
 }

@@ -9,45 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	InputKeyRegular = "inputKeyRegular"
-)
-
 func InitializeTonClient(conf *config.Config) (*tonlib.Client, error) {
-	client, err := initializeTonClient(conf)
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
-}
-
-func InitializeTonClientKey(conf *config.Config) *tonlib.InputKey {
-	return &tonlib.InputKey{
-		Type:          InputKeyRegular,
-		LocalPassword: conf.KeyPassword,
-		Key: tonlib.TONPrivateKey{
-			PublicKey: conf.PublicKey,
-			Secret:    conf.SecretKey,
-		},
-	}
-}
-
-func InitializeTonClientOpts(
-	сlient *tonlib.Client,
-	key *tonlib.InputKey,
-	conf *config.Config,
-	logger *zap.Logger,
-) []tonapi.Opt {
-	return []tonapi.Opt{
-		tonapi.WithClient(сlient),
-		tonapi.WithKey(key),
-		tonapi.WithConfig(conf),
-		tonapi.WithLogger(logger),
-	}
-}
-
-func initializeTonClient(conf *config.Config) (*tonlib.Client, error) {
 	options, err := tonlib.ParseConfigFile(conf.TONLibConfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("parse config file error: %w", err)
@@ -64,4 +26,16 @@ func initializeTonClient(conf *config.Config) (*tonlib.Client, error) {
 	}
 
 	return client, nil
+}
+
+func InitializeTonClientOpts(
+	сlient *tonlib.Client,
+	conf *config.Config,
+	logger *zap.Logger,
+) []tonapi.Opt {
+	return []tonapi.Opt{
+		tonapi.WithClient(сlient),
+		tonapi.WithConfig(conf),
+		tonapi.WithLogger(logger),
+	}
 }

@@ -14,7 +14,6 @@ type Container struct {
 	Transactions *transactions.Controller
 
 	Client *tonlib.Client
-	Key    *tonlib.InputKey
 	Config *config.Config
 	Logger *zap.Logger
 }
