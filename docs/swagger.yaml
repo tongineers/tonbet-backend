@@ -9,17 +9,17 @@ paths:
       operationId: get-transactions
       parameters:
       - description: Address
-        in: path
+        in: query
         name: addr
         required: true
         type: string
       - description: Hash
-        in: path
+        in: query
         name: hash
         required: true
         type: string
       - description: Lt
-        in: path
+        in: query
         name: lt
         required: true
         type: integer

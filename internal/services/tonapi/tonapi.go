@@ -64,7 +64,11 @@ func New(opts ...Opt) (*Service, error) {
 }
 
 func (s *Service) GetTransactions(in *dto.GetTransactions) ([]*dto.Transaction, error) {
-	resp, err := s.client.RawGetTransactions(*tonlib.NewAccountAddress(in.Addr), *tonlib.NewInternalTransactionId(in.Hash, tonlib.JSONInt64(in.Lt)), *s.key)
+	resp, err := s.client.RawGetTransactions(
+		*tonlib.NewAccountAddress(in.Addr),
+		*tonlib.NewInternalTransactionId(in.Hash, tonlib.JSONInt64(in.Lt)),
+		*s.key,
+	)
 	if err != nil {
 		// need to restart container
 		//panic(err)

@@ -32,21 +32,21 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Address",
                         "name": "addr",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Hash",
                         "name": "hash",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     },
                     {
                         "type": "integer",
                         "description": "Lt",
                         "name": "lt",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     }
                 ],

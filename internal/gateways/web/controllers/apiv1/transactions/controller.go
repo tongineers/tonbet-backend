@@ -34,9 +34,9 @@ func NewController(c TONClient, l *zap.Logger) *Controller {
 // @ID get-transactions
 // @Accept json
 // @Produce json
-// @Param addr path string true	"Address"
-// @Param hash path string true	"Hash"
-// @Param lt path int true	"Lt"
+// @Param addr query string true "Address"
+// @Param hash query string true "Hash"
+// @Param lt query int true	"Lt"
 // @Success 200
 // @Router /api/v1/transactions [get]
 func (ctrl *Controller) GetTransactions(ctx *gin.Context) {
@@ -85,9 +85,14 @@ func (ctrl *Controller) GetTransactions(ctx *gin.Context) {
 		Hash: hash,
 		Lt:   lt,
 	})
+	if err != nil {
+		// ctrl.logger.Error("")
+
+		ctx.Status(http.StatusInternalServerError)
+		return
+	}
 
 	ctx.JSON(http.StatusOK, txns)
-	return
 }
 
 // DefineRoutes adds controller routes to the router
