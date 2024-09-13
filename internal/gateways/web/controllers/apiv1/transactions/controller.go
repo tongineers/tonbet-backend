@@ -37,7 +37,7 @@ func NewController(c TONClient, l *zap.Logger) *Controller {
 // @Param addr path string true	"Address"
 // @Param hash path string true	"Hash"
 // @Param lt path int true	"Lt"
-// @Success 200 {object} ResponseDoc
+// @Success 200
 // @Router /api/v1/transactions [get]
 func (ctrl *Controller) GetTransactions(ctx *gin.Context) {
 	var (

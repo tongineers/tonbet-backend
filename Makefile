@@ -30,7 +30,7 @@ deps:
 	wire ./...
 
 swagger:
-	swag init --parseDependency -g cmd/app/main.go --output=./api
+	swag init --pd -g cmd/app/main.go
 
 proto:
 	protoc --go_out=plugins=grpc:. internal/grpc/schema/*.proto
