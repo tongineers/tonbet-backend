@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package tonapi.v1;
+
+message Transaction {
+    string data = 1;
+    int64 fee = 2;
+    RawMessage in_msg = 3;
+    int64 other_fee = 4;
+    repeated RawMessage out_msgs = 5;
+    int64 storage_fee = 6;
+    InternalTransactionId transaction_id = 7;
+}
+
+message RawMessage {
+    string body_hash = 1;
+    int64 created_lt = 2;
+    string destination = 3;
+    int64 fwd_fee = 4;
+    int64 ihr_fee = 5;
+    string message = 6;
+    string source = 7;
+    int64 value = 8;
+}
+
+message InternalTransactionId {
+    string hash = 1;
+    int64 lt = 2;
+}
+
+message TonAddress {
+    int32 workchain = 1;
+    string address = 2;
+}
+
+message ActiveBet {
+    int32 id = 1;
+    int32 roll_under = 2;
+    int64 amount = 3;
+    TonAddress player_address = 4;
+    TonAddress ref_address = 5;
+    int64 ref_bonus = 6;
+    string seed = 7;
+}

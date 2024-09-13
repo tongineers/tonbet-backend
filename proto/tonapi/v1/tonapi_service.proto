@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package tonapi.v1;
+
+import "tonapi/v1/tonapi.proto";
+
+service TonApiService {
+    rpc FetchTransactions (FetchTransactionsRequest) returns (FetchTransactionsResponse) {} // Used by ton-dice-web-worker
+    rpc GetAccountState   (GetAccountStateRequest)   returns (GetAccountStateResponse) {}   // Used by ton-dice-web-worker, ton-dice-web-server
+    rpc GetBetSeed        (GetBetSeedRequest)        returns (GetBetSeedResponse) {}        // Used by ton-dice-web-worker
+    rpc GetActiveBets     (GetActiveBetsRequest)     returns (GetActiveBetsResponse) {}     // Used by ton-dice-web-worker
+    rpc GetSeqno          (GetSeqnoRequest)          returns (GetSeqnoResponse) {}          // Used by ton-dice-web-worker
+    rpc SendMessage       (SendMessageRequest)       returns (SendMessageResponse) {}       // Used by ton-dice-web-worker
+}
+
+message FetchTransactionsRequest {
+    string address = 1;
+    int64 lt = 2;
+    string hash = 3;
+}
+message FetchTransactionsResponse {
+    repeated tonapi.v1.Transaction items = 1;
+}
+
+message GetAccountStateRequest {
+    string account_address = 1;
+}
+
+message GetAccountStateResponse {
+    int64 balance = 1;
+    string code = 2;
+    string data = 3;
+    string frozen_hash = 4;
+    tonapi.v1.InternalTransactionId last_transaction_id = 5;
+    int64 sync_utime = 6;
+}
+
+message GetBetSeedRequest {
+    int64 bet_id = 1;
+}
+message GetBetSeedResponse {
+    string seed = 1;
+}
+
+message GetActiveBetsRequest {}
+message GetActiveBetsResponse {
+    repeated tonapi.v1.ActiveBet bets = 1;
+}
+
+message GetSeqnoRequest {}
+message GetSeqnoResponse {
+    string seqno = 1;
+}
+
+message SendMessageRequest {
+    bytes body = 1;
+}
+message SendMessageResponse {
+    string ok = 1;
+}
