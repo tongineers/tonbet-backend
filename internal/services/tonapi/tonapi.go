@@ -1,37 +1,52 @@
 package tonapi
 
 import (
+	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 
-	tonlib "github.com/mercuryoio/tonlib-go/v2"
-	"github.com/tongineers/tonlib-go-api/config"
-	"github.com/tongineers/tonlib-go-api/internal/dto"
-	"github.com/tongineers/tonlib-go-api/internal/gateways/web/controllers/apiv1/transactions"
+	"github.com/xssnick/tonutils-go/address"
+	"github.com/xssnick/tonutils-go/tlb"
+	"github.com/xssnick/tonutils-go/ton"
+	_ "github.com/xssnick/tonutils-go/tvm/cell"
 	"go.uber.org/zap"
+
+	"github.com/tongineers/dice-ton-api/config"
+	pb "github.com/tongineers/dice-ton-api/gen/go/tonapi/v1"
+	appgo "github.com/tongineers/dice-ton-api/pkg/app-go"
 )
 
 var (
-	_ transactions.TONClient = (*Service)(nil)
-)
-
-const (
-	InputKeyRegular = "inputKeyRegular"
+	_ appgo.GRPCService = (*Service)(nil)
 )
 
 type (
 	Service struct {
-		client *tonlib.Client
-		key    *tonlib.InputKey
+		client *ton.APIClient
 		conf   *config.Config
 		logger *zap.Logger
+		pb.UnimplementedTonApiServiceServer
 	}
 
 	Opt func(s *Service)
 )
 
-func WithClient(c *tonlib.Client) Opt {
+const (
+	BetID = iota
+	RollUnder
+	Amount
+	PlayerWorkchain
+	PlayerAddress
+	RefWorkchain
+	RefAddress
+	RefBonus
+	Seed
+)
+
+func WithClient(c *ton.APIClient) Opt {
 	return func(s *Service) {
 		s.client = c
 	}
@@ -49,280 +64,236 @@ func WithLogger(l *zap.Logger) Opt {
 	}
 }
 
+func New(opts ...Opt) (*Service, error) {
+	s := &Service{}
+	s.apply(opts...)
+
+	return s, nil
+}
+
 func (s *Service) apply(opts ...Opt) {
 	for _, opt := range opts {
 		opt(s)
 	}
 }
 
-func New(opts ...Opt) (*Service, error) {
-	s := &Service{}
-	s.apply(opts...)
-
-	// prepare data
-	loc := tonlib.SecureBytes("loc_pass")
-	mem := tonlib.SecureBytes("mem_pass")
-	seed := tonlib.SecureBytes("")
-
-	// create new key
-	pKey, err := s.client.CreateNewKey(loc, mem, seed)
-	if err != nil {
-		panic(err)
+func (s *Service) ServiceDef() *appgo.GRPCOptions {
+	return &appgo.GRPCOptions{
+		Handler:     pb.RegisterTonApiServiceHandler,
+		ServiceDesc: &pb.TonApiService_ServiceDesc,
+		ServiceImpl: s,
 	}
-
-	// set service key
-	s.key = &tonlib.InputKey{
-		Type:          InputKeyRegular,
-		LocalPassword: base64.StdEncoding.EncodeToString(loc),
-		Key: tonlib.TONPrivateKey{
-			PublicKey: pKey.PublicKey,
-			Secret:    base64.StdEncoding.EncodeToString([]byte(pKey.Secret)),
-		},
-	}
-
-	return s, nil
 }
 
-func (s *Service) GetTransactions(in *dto.GetTransactions) ([]*dto.Transaction, error) {
-	resp, err := s.client.RawGetTransactions(
-		*tonlib.NewAccountAddress(in.Addr),
-		*tonlib.NewInternalTransactionId(in.Hash, tonlib.JSONInt64(in.Lt)),
-		*s.key,
-	)
+func (s *Service) FetchTransactions(ctx context.Context, in *pb.FetchTransactionsRequest) (*pb.FetchTransactionsResponse, error) {
+	freshBlock, err := s.client.CurrentMasterchainInfo(context.Background())
 	if err != nil {
-		// need to restart container
-		//panic(err)
-		//s.api.UpdateTonConnection()
 		return nil, err
 	}
 
-	txns := make([]*dto.Transaction, 0)
-	for _, trx := range resp.Transactions {
-		msgData := trx.InMsg.MsgData.(map[string]interface{})
-		msgDataText := ""
-		if msgData["@type"] == "msg.dataText" {
-			msgDataText = msgData["text"].(string)
-		}
-		inMsg := &dto.Message{
-			BodyHash:    trx.InMsg.BodyHash,
-			CreatedLt:   int64(trx.InMsg.CreatedLt),
-			Destination: trx.InMsg.Destination.AccountAddress,
-			FwdFee:      int64(trx.InMsg.FwdFee),
-			IhrFee:      int64(trx.InMsg.IhrFee),
-			Message:     msgDataText,
-			Source:      trx.InMsg.Source.AccountAddress,
-			Value:       int64(trx.InMsg.Value),
-		}
-
-		outMsgs := make([]*dto.Message, 0)
-		for _, msg := range trx.OutMsgs {
-			msgData := msg.MsgData.(map[string]interface{})
-			msgDataText := ""
-			if msgData["@type"] == "msg.dataText" {
-				msgDataText = msgData["text"].(string)
-			}
-
-			outMsg := &dto.Message{
-				BodyHash:    msg.BodyHash,
-				CreatedLt:   int64(msg.CreatedLt),
-				Destination: msg.Destination.AccountAddress,
-				FwdFee:      int64(msg.FwdFee),
-				IhrFee:      int64(msg.IhrFee),
-				Message:     msgDataText,
-				Source:      msg.Source.AccountAddress,
-				Value:       int64(msg.Value),
-			}
-			outMsgs = append(outMsgs, outMsg)
-		}
-
-		txnID := &dto.TransactionID{
-			Hash: trx.TransactionId.Hash,
-			Lt:   int64(trx.TransactionId.Lt),
-		}
-
-		txn := &dto.Transaction{
-			Data:       trx.Data,
-			Fee:        int64(trx.Fee),
-			InMsg:      inMsg,
-			OtherFee:   int64(trx.OtherFee),
-			OutMsgs:    outMsgs,
-			StorageFee: int64(trx.StorageFee),
-			TxnID:      txnID,
-		}
-		txns = append(txns, txn)
-	}
-
-	return txns, nil
-}
-
-func (s *Service) GetAccountState(in *dto.GetAccountState) (*dto.AccountState, error) {
-	resp, err := s.client.RawGetAccountState(*tonlib.NewAccountAddress(in.Addr))
+	addr, err := address.ParseAddr(in.GetAddress())
 	if err != nil {
-		// need to restart container
-		//panic(err)
-		//s.api.UpdateTonConnection()
 		return nil, err
 	}
 
-	if !isRawFullAccountState(resp) {
-		return nil, errors.New("Invalid return type for GetAccountState")
+	hash, err := base64.StdEncoding.DecodeString(in.GetHash())
+	if err != nil {
+		return nil, err
 	}
 
-	txnID := &dto.TransactionID{
-		Hash: resp.LastTransactionId.Hash,
-		Lt:   int64(resp.LastTransactionId.Lt),
+	res, err := s.client.WaitForBlock(freshBlock.SeqNo).ListTransactions(context.Background(), addr, 100, uint64(in.GetLt()), hash)
+	if err != nil {
+		return nil, err
 	}
 
-	return &dto.AccountState{
-		Balance:           int64(resp.Balance),
-		Code:              resp.Code,
-		Data:              resp.Data,
-		FrozenHash:        resp.FrozenHash,
-		LastTransactionId: txnID,
-		SyncUtime:         resp.SyncUtime,
+	txns := make([]*pb.Transaction, 0)
+	for _, txn := range res {
+		if txn.IO.In.MsgType != tlb.MsgTypeInternal {
+			continue
+		}
+
+		msgData := txn.IO.In.AsInternal()
+		inMsg := &pb.RawMessage{
+			Source:      msgData.SrcAddr.String(),
+			Destination: msgData.DstAddr.String(),
+			Value:       msgData.Amount.Nano().Int64(),
+			FwdFee:      msgData.FwdFee.Nano().Int64(),
+			IhrFee:      msgData.IHRFee.Nano().Int64(),
+			Message:     msgData.Comment(),
+			//BodyHash:    string(msgData.Body.Hash()),
+			CreatedLt: int64(msgData.CreatedLT),
+		}
+
+		outMsgs := make([]*pb.RawMessage, 0)
+		if txn.OutMsgCount > 0 {
+			msgs, err := txn.IO.Out.ToSlice()
+			if err != nil {
+				continue
+			}
+
+			for _, msg := range msgs {
+				msgData := msg.AsInternal()
+				outMsgs = append(outMsgs, &pb.RawMessage{
+					Source:      msgData.SrcAddr.String(),
+					Destination: msgData.DstAddr.String(),
+					Value:       msgData.Amount.Nano().Int64(),
+					FwdFee:      msgData.FwdFee.Nano().Int64(),
+					IhrFee:      msgData.IHRFee.Nano().Int64(),
+					Message:     msgData.Comment(),
+					//BodyHash:    string(msgData.Body.Hash()),
+					CreatedLt: int64(msgData.CreatedLT),
+				})
+
+				// bs := msg.Msg.Payload().BitsSize()
+				// s := msg.Msg.Payload().BeginParse()
+				// b, err := s.LoadSlice(bs)
+				// if err != nil {
+				// 	panic(err)
+				// }
+
+				// comment += string(b)
+
+				// s, err = s.LoadRef()
+				// if err != nil {
+				// 	panic(err)
+				// }
+
+				// bs = s.BitsLeft()
+				// b, err = s.LoadSlice(bs)
+				// if err != nil {
+				// 	panic(err)
+				// }
+
+				// comment += string(b)
+			}
+		}
+
+		txns = append(txns, &pb.Transaction{
+			TransactionId: &pb.InternalTransactionId{
+				//Hash: string(txn.Hash),
+				Lt: int64(txn.LT),
+			},
+			//Data:    txn.Dump(),
+			InMsg:   inMsg,
+			OutMsgs: outMsgs,
+			Fee:     txn.TotalFees.Coins.Nano().Int64(),
+		})
+	}
+
+	fmt.Println(txns)
+
+	return &pb.FetchTransactionsResponse{
+		Items: txns,
 	}, nil
 }
 
-// no longer in use
-func (s *Service) GetBetSeed(in *dto.GetBetSeed) {
-
-}
-
-func (s *Service) GetActiveBets(in *dto.GetActiveBets) ([]*dto.Bet, error) {
-	address := tonlib.NewAccountAddress(s.conf.TONContractAddress)
-	smcInfo, err := s.client.SmcLoad(*address)
-	if err != nil {
-		//s.api.UpdateTonConnection()
-		return nil, err
-	}
-
-	methodName := "active_bets"
-	methodID := struct {
-		Type  string `json:"@type"`
-		Extra string `json:"@extra"`
-		Name  string `json:"name"`
-	}{
-		Type: "smc.methodIdName",
-		Name: methodName,
-	}
-
-	stack := make([]tonlib.TvmStackEntry, 0)
-	res, err := s.runGetMethod(smcInfo.Id, methodID, stack)
+func (s *Service) GetAccountState(ctx context.Context, in *pb.GetAccountStateRequest) (*pb.GetAccountStateResponse, error) {
+	freshBlock, err := s.client.CurrentMasterchainInfo(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	if len(res) == 0 {
-		return nil, fmt.Errorf("empty response")
-	}
-
-	return nil, nil
-
-	// var entries CustomTvmStackEntry
-	// asBytes, err := json.Marshal(res[0])
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// err = json.Unmarshal(asBytes, &bets)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// var activeBets []*pb.ActiveBet
-	// for _, element := range bets.List.Elements {
-	// 	var betIdRaw CustomTvmStackEntryNumber
-	// 	asBytes, err := json.Marshal(element.Tuple.Elements[0])
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	err = json.Unmarshal(asBytes, &betIdRaw)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	betId, err := strconv.Atoi(betIdRaw.Number.Number)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	other := element.Tuple.Elements[1]
-
-	// 	var tmp _CustomTvmStackEntryTuple
-	// 	asBytes, err = json.Marshal(other)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	err = json.Unmarshal(asBytes, &tmp)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	params := tmp.Tuple.Elements
-
-	// 	rollUnder, err := strconv.Atoi(params[0].Number.Number)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	amount, err := strconv.Atoi(params[1].Number.Number)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	wc1, err := strconv.Atoi(params[2].Number.Number)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	address1 := params[3].Number.Number
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	wc2, err := strconv.Atoi(params[4].Number.Number)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	address2 := params[5].Number.Number
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	refBonus, err := strconv.Atoi(params[6].Number.Number)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	seed := params[7].Number.Number
-
-	// 	bet := &pb.ActiveBet{
-	// 		Id:            int32(betId),
-	// 		RollUnder:     int32(rollUnder),
-	// 		Amount:        int64(amount),
-	// 		PlayerAddress: &pb.TonAddress{Workchain: int32(wc1), Address: address1},
-	// 		RefAddress:    &pb.TonAddress{Workchain: int32(wc2), Address: address2},
-	// 		RefBonus:      int64(refBonus),
-	// 		Seed:          seed,
-	// 	}
-
-	// 	activeBets = append(activeBets, bet)
-	// }
-
-	// return &pb.GetActiveBetsResponse{
-	// 	Bets: activeBets,
-	// }, nil
-}
-
-// no longer in use
-func (s *Service) GetSeqno(in *dto.GetSeqno) {
-
-}
-
-func (s *Service) SendMessage(in *dto.SendMessage) {
-
-}
-
-func (s *Service) runGetMethod(id int64, method interface{}, stack []tonlib.TvmStackEntry) ([]tonlib.TvmStackEntry, error) {
-	resp, err := s.client.SmcRunGetMethod(id, method, stack)
+	addr, err := address.ParseAddr(in.GetAccountAddress())
 	if err != nil {
-		// need to restart container
-		//panic(err)
-		//s.api.UpdateTonConnection()
 		return nil, err
 	}
 
-	return resp.Stack, nil
+	res, err := s.client.WaitForBlock(freshBlock.SeqNo).GetAccount(context.Background(), freshBlock, addr)
+	if err != nil {
+		return nil, err
+	}
+
+	transactionId := &pb.InternalTransactionId{
+		Hash: string(res.LastTxHash),
+		Lt:   int64(res.LastTxLT),
+	}
+
+	return &pb.GetAccountStateResponse{
+		Balance:           res.State.Balance.Nano().Int64(),
+		Code:              res.Code.Dump(),
+		Data:              res.Data.Dump(),
+		LastTransactionId: transactionId,
+	}, nil
+}
+
+func (s *Service) GetActiveBets(ctx context.Context, in *pb.GetActiveBetsRequest) (*pb.GetActiveBetsResponse, error) {
+	freshBlock, err := s.client.CurrentMasterchainInfo(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	addr, err := address.ParseAddr(s.conf.TONContractAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.client.RunGetMethod(context.Background(), freshBlock, addr, "active_bets")
+	if err != nil {
+		return nil, err
+	}
+
+	re := regexp.MustCompile(`[^0-9 ]`)
+	bets := make([]*pb.ActiveBet, 0)
+	for _, item := range res.MustTuple(0) {
+		item = re.ReplaceAllString(fmt.Sprintf("%s", item), "")
+		data := strings.Split(item.(string), " ")
+
+		betID, err := strconv.Atoi(data[BetID])
+		if err != nil {
+			return nil, err
+		}
+
+		rollUnder, err := strconv.Atoi(data[RollUnder])
+		if err != nil {
+			return nil, err
+		}
+
+		amount, err := strconv.Atoi(data[Amount])
+		if err != nil {
+			return nil, err
+		}
+
+		wc1, err := strconv.Atoi(data[PlayerWorkchain])
+		if err != nil {
+			return nil, err
+		}
+		playerAddr, err := toHumanRepresentationAddr(int8(wc1), data[PlayerAddress])
+		if err != nil {
+			return nil, err
+		}
+
+		wc2, err := strconv.Atoi(data[RefWorkchain])
+		if err != nil {
+			return nil, err
+		}
+		refAddr, err := toHumanRepresentationAddr(int8(wc2), data[RefAddress])
+		if err != nil {
+			return nil, err
+		}
+
+		refBonus, err := strconv.Atoi(data[RefBonus])
+		if err != nil {
+			return nil, err
+		}
+
+		seed := data[Seed]
+
+		bets = append(bets, &pb.ActiveBet{
+			Id:            int32(betID),
+			RollUnder:     int32(rollUnder),
+			Amount:        int64(amount),
+			PlayerAddress: &pb.TonAddress{Workchain: int32(wc1), Address: playerAddr},
+			RefAddress:    &pb.TonAddress{Workchain: int32(wc2), Address: refAddr},
+			RefBonus:      int64(refBonus),
+			Seed:          seed,
+		})
+	}
+
+	return &pb.GetActiveBetsResponse{
+		Bets: bets,
+	}, nil
+}
+
+func (s *Service) SendMessage(ctx context.Context, in *pb.SendMessageRequest) (*pb.SendMessageResponse, error) {
+	return &pb.SendMessageResponse{}, nil
 }

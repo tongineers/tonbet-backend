@@ -7,51 +7,38 @@
 package app
 
 import (
-	"github.com/tongineers/tonlib-go-api/config"
-	"github.com/tongineers/tonlib-go-api/internal/app/dependencies"
-	"github.com/tongineers/tonlib-go-api/internal/app/initializers"
-	"github.com/tongineers/tonlib-go-api/internal/gateways/web/controllers/apiv1/transactions"
-	"github.com/tongineers/tonlib-go-api/internal/services/tonapi"
+	"github.com/tongineers/dice-ton-api/config"
+	"github.com/tongineers/dice-ton-api/internal/app/dependencies"
+	"github.com/tongineers/dice-ton-api/internal/app/initializers"
+	"github.com/tongineers/dice-ton-api/internal/services/tonapi"
 )
 
 // Injectors from wire.go:
 
 func BuildApplication() (*Application, error) {
 	configConfig := config.LoadConfig()
-	client, err := initializers.InitializeTonClient(configConfig)
+	apiClient, err := initializers.InitializeTonClient(configConfig)
 	if err != nil {
 		return nil, err
 	}
 	logger := initializers.InitializeLogs()
-	v := initializers.InitializeTonClientOpts(client, configConfig, logger)
+	v := initializers.InitializeTonClientOpts(apiClient, configConfig, logger)
 	service, err := tonapi.New(v...)
 	if err != nil {
 		return nil, err
 	}
-	controller := transactions.NewController(service, logger)
-	container := dependencies.Container{
-		Service:      service,
-		Transactions: controller,
-		Client:       client,
-		Config:       configConfig,
-		Logger:       logger,
+	container := &dependencies.Container{
+		Service: service,
+		Config:  configConfig,
+		Logger:  logger,
 	}
-	engine := initializers.InitializeRouter(container)
-	httpServerConfig := initializers.InitializeHTTPServerConfig(engine)
-	server, err := initializers.InitializeHTTPServer(httpServerConfig)
+	app, err := initializers.InitializeServer(container)
 	if err != nil {
 		return nil, err
 	}
-	dependenciesContainer := &dependencies.Container{
-		Service:      service,
-		Transactions: controller,
-		Client:       client,
-		Config:       configConfig,
-		Logger:       logger,
-	}
 	application := &Application{
-		HttpServer: server,
-		Container:  dependenciesContainer,
+		app:       app,
+		container: container,
 	}
 	return application, nil
 }

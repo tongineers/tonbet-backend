@@ -1,10 +1,10 @@
-package dto
+package models
 
 type (
 	GetTransactions struct {
 		Addr string
 		Hash string
-		Lt   int
+		Lt   uint64
 	}
 
 	GetAccountState struct {

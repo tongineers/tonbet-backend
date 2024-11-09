@@ -5,12 +5,10 @@ package tonapi.v1;
 import "tonapi/v1/tonapi.proto";
 
 service TonApiService {
-    rpc FetchTransactions (FetchTransactionsRequest) returns (FetchTransactionsResponse) {} // Used by ton-dice-web-worker
-    rpc GetAccountState   (GetAccountStateRequest)   returns (GetAccountStateResponse) {}   // Used by ton-dice-web-worker, ton-dice-web-server
-    rpc GetBetSeed        (GetBetSeedRequest)        returns (GetBetSeedResponse) {}        // Used by ton-dice-web-worker
-    rpc GetActiveBets     (GetActiveBetsRequest)     returns (GetActiveBetsResponse) {}     // Used by ton-dice-web-worker
-    rpc GetSeqno          (GetSeqnoRequest)          returns (GetSeqnoResponse) {}          // Used by ton-dice-web-worker
-    rpc SendMessage       (SendMessageRequest)       returns (SendMessageResponse) {}       // Used by ton-dice-web-worker
+    rpc FetchTransactions (FetchTransactionsRequest) returns (FetchTransactionsResponse) {}
+    rpc GetAccountState   (GetAccountStateRequest)   returns (GetAccountStateResponse) {}
+    rpc GetActiveBets     (GetActiveBetsRequest)     returns (GetActiveBetsResponse) {}
+    rpc SendMessage       (SendMessageRequest)       returns (SendMessageResponse) {}
 }
 
 message FetchTransactionsRequest {
@@ -25,7 +23,6 @@ message FetchTransactionsResponse {
 message GetAccountStateRequest {
     string account_address = 1;
 }
-
 message GetAccountStateResponse {
     int64 balance = 1;
     string code = 2;
