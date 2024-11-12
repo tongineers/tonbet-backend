@@ -3,7 +3,7 @@ syntax = "proto3";
 package tonapi.v1;
 
 message Transaction {
-    string data = 1;
+    bytes data = 1;
     int64 fee = 2;
     RawMessage in_msg = 3;
     int64 other_fee = 4;
@@ -13,18 +13,18 @@ message Transaction {
 }
 
 message RawMessage {
-    string body_hash = 1;
-    int64 created_lt = 2;
-    string destination = 3;
+    string source = 1;
+    string destination = 2;
+    int64 value = 3;
     int64 fwd_fee = 4;
     int64 ihr_fee = 5;
     string message = 6;
-    string source = 7;
-    int64 value = 8;
+    bytes body_hash = 7;
+    int64 created_lt = 8;
 }
 
 message InternalTransactionId {
-    string hash = 1;
+    bytes hash = 1;
     int64 lt = 2;
 }
 

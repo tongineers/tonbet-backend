@@ -38,7 +38,7 @@ func InitializeHTTPServerConfig(router *gin.Engine) *HTTPServerConfig {
 }
 
 // InitializeHTTPServer create new http.Server instance
-func InitializeHTTPServer(cfg *HTTPServerConfig) (*http.Server, error) {
+func InitializeHTTPGateway(cfg *HTTPServerConfig) (*http.Server, error) {
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	err := gw.RegisterTonApiServiceHandlerFromEndpoint(context.Background(), mux, "localhost:9090", opts)

@@ -8,6 +8,6 @@ type (
 	}
 )
 
-func (conf *Config) ApplyDefaults() {
-
+func (conf *Config) ApplyDefaults() *Config {
+	return &Config{}
 }

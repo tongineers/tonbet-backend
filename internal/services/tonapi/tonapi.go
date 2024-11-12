@@ -11,6 +11,7 @@ import (
 	"github.com/xssnick/tonutils-go/address"
 	"github.com/xssnick/tonutils-go/tlb"
 	"github.com/xssnick/tonutils-go/ton"
+	"github.com/xssnick/tonutils-go/tvm/cell"
 	_ "github.com/xssnick/tonutils-go/tvm/cell"
 	"go.uber.org/zap"
 
@@ -108,79 +109,56 @@ func (s *Service) FetchTransactions(ctx context.Context, in *pb.FetchTransaction
 
 	txns := make([]*pb.Transaction, 0)
 	for _, txn := range res {
-		if txn.IO.In.MsgType != tlb.MsgTypeInternal {
+		if txn.IO.In.MsgType != tlb.MsgTypeExternalIn {
 			continue
 		}
 
-		msgData := txn.IO.In.AsInternal()
-		inMsg := &pb.RawMessage{
-			Source:      msgData.SrcAddr.String(),
-			Destination: msgData.DstAddr.String(),
-			Value:       msgData.Amount.Nano().Int64(),
-			FwdFee:      msgData.FwdFee.Nano().Int64(),
-			IhrFee:      msgData.IHRFee.Nano().Int64(),
-			Message:     msgData.Comment(),
-			//BodyHash:    string(msgData.Body.Hash()),
-			CreatedLt: int64(msgData.CreatedLT),
+		if txn.OutMsgCount == 0 {
+			continue
+		}
+
+		// msgData := txn.IO.In.AsInternal()
+		// inMsg := &pb.RawMessage{
+		// 	Source:      msgData.SrcAddr.String(),
+		// 	Destination: msgData.DstAddr.String(),
+		// 	Value:       msgData.Amount.Nano().Int64(),
+		// 	FwdFee:      msgData.FwdFee.Nano().Int64(),
+		// 	IhrFee:      msgData.IHRFee.Nano().Int64(),
+		// 	Message:     msgData.Comment(),
+		// 	//BodyHash:    string(msgData.Body.Hash()),
+		// 	CreatedLt: int64(msgData.CreatedLT),
+		// }
+
+		out, err := txn.IO.Out.ToSlice()
+		if err != nil {
+			continue
 		}
 
 		outMsgs := make([]*pb.RawMessage, 0)
-		if txn.OutMsgCount > 0 {
-			msgs, err := txn.IO.Out.ToSlice()
-			if err != nil {
-				continue
-			}
-
-			for _, msg := range msgs {
-				msgData := msg.AsInternal()
-				outMsgs = append(outMsgs, &pb.RawMessage{
-					Source:      msgData.SrcAddr.String(),
-					Destination: msgData.DstAddr.String(),
-					Value:       msgData.Amount.Nano().Int64(),
-					FwdFee:      msgData.FwdFee.Nano().Int64(),
-					IhrFee:      msgData.IHRFee.Nano().Int64(),
-					Message:     msgData.Comment(),
-					//BodyHash:    string(msgData.Body.Hash()),
-					CreatedLt: int64(msgData.CreatedLT),
-				})
-
-				// bs := msg.Msg.Payload().BitsSize()
-				// s := msg.Msg.Payload().BeginParse()
-				// b, err := s.LoadSlice(bs)
-				// if err != nil {
-				// 	panic(err)
-				// }
-
-				// comment += string(b)
-
-				// s, err = s.LoadRef()
-				// if err != nil {
-				// 	panic(err)
-				// }
-
-				// bs = s.BitsLeft()
-				// b, err = s.LoadSlice(bs)
-				// if err != nil {
-				// 	panic(err)
-				// }
-
-				// comment += string(b)
-			}
+		for _, msg := range out {
+			msgData := msg.AsInternal()
+			outMsgs = append(outMsgs, &pb.RawMessage{
+				Source:      msgData.SrcAddr.String(),
+				Destination: msgData.DstAddr.String(),
+				Value:       msgData.Amount.Nano().Int64(),
+				FwdFee:      msgData.FwdFee.Nano().Int64(),
+				IhrFee:      msgData.IHRFee.Nano().Int64(),
+				Message:     msgData.Comment(),
+				BodyHash:    msgData.Body.Hash(),
+				CreatedLt:   int64(msgData.CreatedLT),
+			})
 		}
 
 		txns = append(txns, &pb.Transaction{
 			TransactionId: &pb.InternalTransactionId{
-				//Hash: string(txn.Hash),
-				Lt: int64(txn.LT),
+				Hash: txn.Hash,
+				Lt:   int64(txn.LT),
 			},
-			//Data:    txn.Dump(),
-			InMsg:   inMsg,
+			// InMsg:   inMsg,
 			OutMsgs: outMsgs,
 			Fee:     txn.TotalFees.Coins.Nano().Int64(),
 		})
 	}
-
-	fmt.Println(txns)
 
 	return &pb.FetchTransactionsResponse{
 		Items: txns,
@@ -204,14 +182,14 @@ func (s *Service) GetAccountState(ctx context.Context, in *pb.GetAccountStateReq
 	}
 
 	transactionId := &pb.InternalTransactionId{
-		Hash: string(res.LastTxHash),
+		Hash: res.LastTxHash,
 		Lt:   int64(res.LastTxLT),
 	}
 
 	return &pb.GetAccountStateResponse{
 		Balance:           res.State.Balance.Nano().Int64(),
-		Code:              res.Code.Dump(),
-		Data:              res.Data.Dump(),
+		Code:              []byte(res.Code.Dump()),
+		Data:              []byte(res.Data.Dump()),
 		LastTransactionId: transactionId,
 	}, nil
 }
@@ -295,5 +273,32 @@ func (s *Service) GetActiveBets(ctx context.Context, in *pb.GetActiveBetsRequest
 }
 
 func (s *Service) SendMessage(ctx context.Context, in *pb.SendMessageRequest) (*pb.SendMessageResponse, error) {
-	return &pb.SendMessageResponse{}, nil
+	freshBlock, err := s.client.CurrentMasterchainInfo(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	addr, err := address.ParseAddr(s.conf.TONContractAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	cell, err := cell.FromBOC(in.GetBody())
+	if err != nil {
+		return nil, err
+	}
+
+	msg := &tlb.ExternalMessage{
+		DstAddr: addr,
+		Body:    cell,
+	}
+
+	err = s.client.WaitForBlock(freshBlock.SeqNo).SendExternalMessage(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.SendMessageResponse{
+		Ok: "true",
+	}, nil
 }
