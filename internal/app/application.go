@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/tongineers/dice-ton-api/internal/app/dependencies"
-	appgo "github.com/tongineers/dice-ton-api/pkg/app-go"
+	"github.com/tongineers/dice-ton-api/internal/app/factories"
+	"github.com/tongineers/dice-ton-api/pkg/workerpool"
 )
 
 // Application is a main struct for the application that contains general information
 type Application struct {
-	app       *appgo.App
+	server    *factories.Server
 	container *dependencies.Container
 }
 
@@ -25,10 +26,25 @@ func (a *Application) Start(ctx context.Context, cli bool) error {
 		return nil
 	}
 
-	return a.app.Start(ctx)
+	a.container.Repository.MustMigrate()
+
+	tasks := []workerpool.Task{
+		a.container.Listener,
+		a.container.Resolver,
+		a.container.Fetcher,
+	}
+
+	pool := workerpool.NewWorkerPool(3)
+	pool.Start()
+
+	for _, task := range tasks {
+		pool.Submit(task)
+	}
+
+	return a.server.Start(ctx)
 }
 
 // Stop stops application services
-func (a *Application) Stop() error {
-	return a.app.Stop()
+func (a *Application) Stop() (err error) {
+	return a.server.Stop()
 }

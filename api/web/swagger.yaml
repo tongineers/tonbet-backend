@@ -1,0 +1,52 @@
+info:
+  contact: {}
+paths:
+  /api/v1/account/{addr}:
+    get:
+      consumes:
+      - application/json
+      description: get account
+      operationId: get-account
+      parameters:
+      - description: Account Address
+        in: path
+        name: addr
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Get Account State
+  /api/v1/bets:
+    get:
+      consumes:
+      - application/json
+      description: get bets
+      operationId: get-bets
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Get Bets
+  /api/v1/bets/{addr}:
+    get:
+      consumes:
+      - application/json
+      description: get bets by player address
+      operationId: get-bets-by-player-address
+      parameters:
+      - description: Account Address
+        in: path
+        name: addr
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Get Bets By Player Address
+swagger: "2.0"

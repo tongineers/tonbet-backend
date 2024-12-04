@@ -1,4 +1,4 @@
-package tonapi
+package smartcont
 
 import (
 	"encoding/base64"

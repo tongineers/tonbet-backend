@@ -2,20 +2,24 @@ package models
 
 const (
 	BetStatusNew BetStatus = iota
+	BetStatusSent
 	BetStatusResolved
-	BetStatusFinished
 )
 
 type (
 	Bet struct {
-		ID            int32     `json:"id"`
-		RollUnder     int32     `json:"rollUnder"`
-		Amount        int64     `json:"amount"`
-		PlayerAddress string    `json:"playerAddress"`
-		RefAddress    string    `json:"refAddress"`
-		RefBonus      int64     `json:"refBonus"`
-		Seed          string    `json:"seed"`
+		ID            int       `json:"id"`
+		RollUnder     int       `json:"rollUnder" gorm:"default:(-);"`
+		RandomRoll    int       `json:"randomRoll"`
+		Amount        uint64    `json:"amount" gorm:"default:(-);"`
+		Payout        uint64    `json:"payout"`
+		PlayerAddress string    `json:"playerAddress" gorm:"default:(-);"`
+		RefAddress    string    `json:"refAddress" gorm:"default:(-);"`
+		RefBonus      uint64    `json:"refBonus"`
+		Seed          string    `json:"seed" gorm:"default:(-);"`
 		Status        BetStatus `json:"status"`
+		LastLT        uint64    `json:"lastLT"`
+		LastHash      string    `json:"lastHash"`
 	}
 
 	BetStatus int8

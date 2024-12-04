@@ -30,7 +30,7 @@ deps:
 	wire ./...
 
 swagger:
-	swag init --pd -g cmd/app/main.go
+	swag init --pd -g cmd/app/main.go --output=./api/web
 
 install-tools:
 	@ cat tools/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %

@@ -7,37 +7,46 @@
 package app
 
 import (
-	"github.com/tongineers/dice-ton-api/config"
 	"github.com/tongineers/dice-ton-api/internal/app/dependencies"
-	"github.com/tongineers/dice-ton-api/internal/app/initializers"
-	"github.com/tongineers/dice-ton-api/internal/services/tonapi"
+	"github.com/tongineers/dice-ton-api/internal/app/providers"
+	"github.com/tongineers/dice-ton-api/internal/repositories/bets"
+	"github.com/tongineers/dice-ton-api/internal/services/fetcher"
+	"github.com/tongineers/dice-ton-api/internal/services/listener"
+	"github.com/tongineers/dice-ton-api/internal/services/resolver"
+	"github.com/tongineers/dice-ton-api/internal/services/smartcont"
 )
 
 // Injectors from wire.go:
 
 func BuildApplication() (*Application, error) {
-	configConfig := config.LoadConfig()
-	apiClient, err := initializers.InitializeTonClient(configConfig)
+	config := providers.ConfigProvider()
+	apiClient, err := smartcont.NewTonAPIClient(config)
 	if err != nil {
 		return nil, err
 	}
-	logger := initializers.InitializeLogs()
-	v := initializers.InitializeTonClientOpts(apiClient, configConfig, logger)
-	service, err := tonapi.New(v...)
+	service := smartcont.New(apiClient, config)
+	db, err := providers.StoreProvider(config)
 	if err != nil {
 		return nil, err
 	}
+	repository := bets.New(db)
+	logger := providers.LogsProvider()
+	listenerService := listener.New(service, repository, logger)
+	resolverService := resolver.New(service, repository, logger)
+	fetcherService := fetcher.New(service, repository, config, logger)
 	container := &dependencies.Container{
-		Service: service,
-		Config:  configConfig,
-		Logger:  logger,
+		Listener:     listenerService,
+		Resolver:     resolverService,
+		Fetcher:      fetcherService,
+		DiceContract: service,
+		Repository:   repository,
+		Config:       config,
+		Logger:       logger,
 	}
-	app, err := initializers.InitializeServer(container)
-	if err != nil {
-		return nil, err
-	}
+	engine := providers.RouterProvider(container)
+	server := providers.ServerProvider(engine, config, logger)
 	application := &Application{
-		app:       app,
+		server:    server,
 		container: container,
 	}
 	return application, nil

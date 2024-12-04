@@ -1,0 +1,80 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/v1/account/{addr}": {
+            "get": {
+                "description": "get account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get Account State",
+                "operationId": "get-account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account Address",
+                        "name": "addr",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/bets": {
+            "get": {
+                "description": "get bets",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get Bets",
+                "operationId": "get-bets",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/bets/{addr}": {
+            "get": {
+                "description": "get bets by player address",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get Bets By Player Address",
+                "operationId": "get-bets-by-player-address",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account Address",
+                        "name": "addr",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        }
+    }
+}
