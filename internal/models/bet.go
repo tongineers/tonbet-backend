@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 const (
 	BetStatusNew BetStatus = iota
 	BetStatusSent
@@ -20,6 +22,7 @@ type (
 		Status        BetStatus `json:"status"`
 		LastLT        uint64    `json:"lastLT"`
 		LastHash      string    `json:"lastHash"`
+		CreatedAt     time.Time `json:"createdAt" gorm:"default:(-);"`
 	}
 
 	BetStatus int8

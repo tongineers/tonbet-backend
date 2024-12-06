@@ -35,7 +35,9 @@ func (r *Repository) Migrate() error {
 
 func (r *Repository) Read() ([]*models.Bet, error) {
 	bets := make([]*models.Bet, 0)
-	res := r.db.Limit(DefaultReadLimit).Find(&bets)
+	res := r.db.Limit(DefaultReadLimit).
+		Order("id desc").
+		Find(&bets)
 	return bets, res.Error
 }
 
@@ -43,6 +45,7 @@ func (r *Repository) ReadByPlayerAddress(addr string) ([]*models.Bet, error) {
 	bets := make([]*models.Bet, 0)
 	res := r.db.Where("player_address = ?", addr).
 		Limit(DefaultReadLimit).
+		Order("id desc").
 		Find(&bets)
 	return bets, res.Error
 }
