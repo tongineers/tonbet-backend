@@ -1,0 +1,41 @@
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  annotations:
+    fluxcd.io/automated: "true"
+  name: dice-ton-api-dep
+  labels:
+    app: dice-ton-api
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dice-ton-api
+  template:
+    metadata:
+      labels:
+        app: dice-ton-api
+    spec:
+      containers:
+      - name: dice-ton-api
+        image: tongineers/dice-ton-api:v0.0.1
+        # volumeMounts:
+        # - name: config-volume
+        #   mountPath: /etc/tonlib.config.json.example
+        #   subPath: tonlib.config.json.example
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5001
+        envFrom:
+        - configMapRef:
+            name: dice-ton-api-configmap
+        - secretKeyRef:
+            name: dice-ton-api-secret
+      imagePullSecrets:
+      - name: regcred
+      # volumes:
+      # - name: config-volume
+      #   configMap:
+      #     name: dice-ton-api-cm

@@ -17,19 +17,15 @@ import (
 	"github.com/xssnick/tonutils-go/ton"
 	"github.com/xssnick/tonutils-go/tvm/cell"
 
-	"github.com/tongineers/dice-ton-api/config"
-	"github.com/tongineers/dice-ton-api/internal/models"
+	"github.com/tongineers/tonbet-backend/config"
+	"github.com/tongineers/tonbet-backend/internal/models"
 )
 
 type (
 	Service struct {
-		api  *ton.APIClient
+		api  ton.APIClientWrapped
 		conf *config.Config
 	}
-)
-
-const (
-	ResolveQueryFileName = "resolve-query.fif"
 )
 
 const (
@@ -42,16 +38,21 @@ const (
 	RefAddress
 	RefBonus
 	Seed
+
+	ResolveQueryFilePath = "scripts/fift/resolve-query.fif"
 )
 
-func New(
-	api *ton.APIClient,
-	conf *config.Config,
-) *Service {
-	return &Service{
-		api:  api,
-		conf: conf,
+// New ...
+func New(conf *config.Config) (*Service, error) {
+	client, err := NewConnectionPool(conf.TONConfigPath)
+	if err != nil {
+		return nil, err
 	}
+
+	return &Service{
+		api:  ton.NewAPIClient(client).WithRetry(),
+		conf: conf,
+	}, nil
 }
 
 // GetAccountState returns account state by the specific address.
@@ -205,7 +206,7 @@ func (s *Service) GetActiveBets() ([]*models.Bet, error) {
 
 // ResolveBet resolving active bet with specific betID and seed.
 func (s *Service) ResolveBet(betID int, seed string) error {
-	fileNameWithPath := ResolveQueryFileName
+	fileNameWithPath := ResolveQueryFilePath
 	fileNameStart := strings.LastIndex(fileNameWithPath, "/")
 	fileName := fileNameWithPath[fileNameStart+1:]
 
@@ -213,7 +214,7 @@ func (s *Service) ResolveBet(betID int, seed string) error {
 	_ = os.Remove(bocFile)
 
 	var out bytes.Buffer
-	cmd := exec.Command("fift", "-s", fileNameWithPath, s.conf.TONOwnerKeyFile, s.conf.TONContractAddr, strconv.Itoa(betID), seed)
+	cmd := exec.Command("fift", "-s", fileNameWithPath, s.conf.TONSecretPath, s.conf.TONContractAddr, strconv.Itoa(betID), seed)
 	cmd.Stderr = &out
 
 	err := cmd.Run()

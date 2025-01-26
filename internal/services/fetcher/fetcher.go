@@ -5,9 +5,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/tongineers/dice-ton-api/config"
-	"github.com/tongineers/dice-ton-api/internal/models"
-	"github.com/tongineers/dice-ton-api/pkg/workerpool"
+	"github.com/tongineers/tonbet-backend/config"
+	"github.com/tongineers/tonbet-backend/internal/models"
+	"github.com/tongineers/tonbet-backend/pkg/workerpool"
 )
 
 var (

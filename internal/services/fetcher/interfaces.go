@@ -5,7 +5,7 @@ package fetcher
 import (
 	"context"
 
-	"github.com/tongineers/dice-ton-api/internal/models"
+	"github.com/tongineers/tonbet-backend/internal/models"
 )
 
 type (

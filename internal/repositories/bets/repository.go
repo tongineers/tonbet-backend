@@ -4,7 +4,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/tongineers/dice-ton-api/internal/models"
+	"github.com/tongineers/tonbet-backend/internal/models"
 )
 
 type (
@@ -23,14 +23,14 @@ func New(db *gorm.DB) *Repository {
 	}
 }
 
+func (r *Repository) Migrate() error {
+	return r.db.AutoMigrate(&models.Bet{})
+}
+
 func (r *Repository) MustMigrate() {
 	if err := r.Migrate(); err != nil {
 		panic(err)
 	}
-}
-
-func (r *Repository) Migrate() error {
-	return r.db.AutoMigrate(&models.Bet{})
 }
 
 func (r *Repository) Read() ([]*models.Bet, error) {

@@ -3,7 +3,7 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: github.com/tongineers/dice-ton-api/gen
+      value: github.com/tongineers/tonbet-backend/gen
 plugins:
   - local: protoc-gen-go
     out: gen/go

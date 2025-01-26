@@ -1,4 +1,4 @@
-PROJECT_PKG = github.com/tongineers/tonlib-go-api
+PROJECT_PKG = github.com/tongineers/tonbet-backend
 BUILD_DIR = build
 VERSION ?=$(shell git describe --tags --exact-match 2>/dev/null || git symbolic-ref -q --short HEAD)
 COMMIT_HASH ?= $(shell git rev-parse --short HEAD 2>/dev/null)

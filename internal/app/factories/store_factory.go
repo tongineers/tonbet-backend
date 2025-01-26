@@ -3,7 +3,7 @@ package factories
 import (
 	"fmt"
 
-	"github.com/tongineers/dice-ton-api/config"
+	"github.com/tongineers/tonbet-backend/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/tongineers/dice-ton-api/pkg/app-go/workerpool"
+	"github.com/tongineers/tonbet-backend/pkg/workerpool"
 )
 
 func TestWorkerPool(t *testing.T) {

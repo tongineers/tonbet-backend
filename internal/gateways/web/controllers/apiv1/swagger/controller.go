@@ -6,8 +6,8 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 
 	//nolint: golint //reason: blank import because of swagger docs init
-	_ "github.com/tongineers/dice-ton-api/api/web"
-	"github.com/tongineers/dice-ton-api/internal/gateways/web/controllers/apiv1"
+	_ "github.com/tongineers/tonbet-backend/api/web"
+	"github.com/tongineers/tonbet-backend/internal/gateways/web/controllers/apiv1"
 )
 
 var (

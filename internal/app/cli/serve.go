@@ -9,7 +9,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/tongineers/dice-ton-api/internal/app"
+	"github.com/tongineers/tonbet-backend/internal/app"
 )
 
 const (

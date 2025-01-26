@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  tonbet-backend:
+    build: .
+    container_name: tonbet-backend
+    env_file:
+      - .env.test
+    ports:
+      - 5000:5000
+      - 5001:5001
+    volumes:
+      - ${TON_CONFIG_PATH}:${TON_CONFIG_PATH}
+      - ${TON_SECRET_PATH}:${TON_SECRET_PATH}
+    depends_on:
+      - postgres
+  
+  postgres:
+    image: postgres:17.2-alpine
+    ports:
+      - 5432:5432
+    volumes:
+      - ${PWD}/.postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}

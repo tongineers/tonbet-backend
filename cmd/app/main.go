@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/tongineers/dice-ton-api/internal/app/cli"
+	"github.com/tongineers/tonbet-backend/internal/app/cli"
 )
 
 func main() {

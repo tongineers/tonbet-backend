@@ -3,12 +3,12 @@ package dependencies
 import (
 	"go.uber.org/zap"
 
-	"github.com/tongineers/dice-ton-api/config"
-	repository "github.com/tongineers/dice-ton-api/internal/repositories/bets"
-	"github.com/tongineers/dice-ton-api/internal/services/fetcher"
-	"github.com/tongineers/dice-ton-api/internal/services/listener"
-	"github.com/tongineers/dice-ton-api/internal/services/resolver"
-	"github.com/tongineers/dice-ton-api/internal/services/smartcont"
+	"github.com/tongineers/tonbet-backend/config"
+	repository "github.com/tongineers/tonbet-backend/internal/repositories/bets"
+	"github.com/tongineers/tonbet-backend/internal/services/fetcher"
+	"github.com/tongineers/tonbet-backend/internal/services/listener"
+	"github.com/tongineers/tonbet-backend/internal/services/resolver"
+	"github.com/tongineers/tonbet-backend/internal/services/smartcont"
 )
 
 // Container is a DI container for application

@@ -8,11 +8,11 @@ import (
 	. "github.com/onsi/gomega"
 	"go.uber.org/zap"
 
-	"github.com/tongineers/dice-ton-api/config"
-	"github.com/tongineers/dice-ton-api/internal/app/dependencies"
-	"github.com/tongineers/dice-ton-api/internal/interfaces"
-	"github.com/tongineers/dice-ton-api/internal/models"
-	"github.com/tongineers/dice-ton-api/internal/services/listener"
+	"github.com/tongineers/tonbet-backend/config"
+	"github.com/tongineers/tonbet-backend/internal/app/dependencies"
+	"github.com/tongineers/tonbet-backend/internal/interfaces"
+	"github.com/tongineers/tonbet-backend/internal/models"
+	"github.com/tongineers/tonbet-backend/internal/services/listener"
 )
 
 func TestListener(t *testing.T) {

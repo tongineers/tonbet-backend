@@ -1,4 +1,4 @@
-# ton-api
+# TONBET (dice)
 grpc proxy into tonlib-go
 
 ## Methods

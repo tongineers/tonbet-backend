@@ -1,8 +1,8 @@
 package providers
 
 import (
-	"github.com/tongineers/dice-ton-api/config"
-	"github.com/tongineers/dice-ton-api/internal/app/factories"
+	"github.com/tongineers/tonbet-backend/config"
+	"github.com/tongineers/tonbet-backend/internal/app/factories"
 	"gorm.io/gorm"
 )
 

@@ -1,6 +1,6 @@
-module github.com/tongineers/dice-ton-api
+module github.com/tongineers/tonbet-backend
 
-go 1.23
+go 1.23.1
 
 require (
 	github.com/caarlos0/env/v11 v11.2.2

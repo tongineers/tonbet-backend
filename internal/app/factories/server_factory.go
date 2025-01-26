@@ -49,7 +49,7 @@ func ServerFactory(config *ServerConfig, logger *zap.Logger) *Server {
 	}
 
 	srv.httpServer = &http.Server{
-		Addr:    fmt.Sprintf("localhost:%d", config.HttpPort),
+		Addr:    fmt.Sprintf(":%d", config.HttpPort),
 		Handler: config.Router,
 	}
 

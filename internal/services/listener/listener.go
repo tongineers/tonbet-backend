@@ -5,8 +5,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/tongineers/dice-ton-api/internal/models"
-	"github.com/tongineers/dice-ton-api/pkg/workerpool"
+	"github.com/tongineers/tonbet-backend/internal/models"
+	"github.com/tongineers/tonbet-backend/pkg/workerpool"
 )
 
 var (
@@ -76,6 +76,7 @@ func (s *Service) Do() error {
 
 		copy := *bet
 		copy.Status = models.BetStatusNew
+		copy.CreatedAt = time.Now()
 
 		s.logger.Info("new active bet found",
 			zap.Int("id", bet.ID),

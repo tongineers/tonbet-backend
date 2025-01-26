@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"github.com/tongineers/dice-ton-api/config"
+	"github.com/tongineers/tonbet-backend/config"
 )
 
 func ConfigProvider() *config.Config {

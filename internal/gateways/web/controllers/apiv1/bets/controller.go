@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/tongineers/dice-ton-api/internal/gateways/web/controllers/apiv1"
-	"github.com/tongineers/dice-ton-api/internal/repositories/bets"
+	"github.com/tongineers/tonbet-backend/internal/gateways/web/controllers/apiv1"
+	"github.com/tongineers/tonbet-backend/internal/repositories/bets"
 )
 
 var (

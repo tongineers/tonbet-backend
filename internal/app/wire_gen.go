@@ -7,24 +7,23 @@
 package app
 
 import (
-	"github.com/tongineers/dice-ton-api/internal/app/dependencies"
-	"github.com/tongineers/dice-ton-api/internal/app/providers"
-	"github.com/tongineers/dice-ton-api/internal/repositories/bets"
-	"github.com/tongineers/dice-ton-api/internal/services/fetcher"
-	"github.com/tongineers/dice-ton-api/internal/services/listener"
-	"github.com/tongineers/dice-ton-api/internal/services/resolver"
-	"github.com/tongineers/dice-ton-api/internal/services/smartcont"
+	"github.com/tongineers/tonbet-backend/internal/app/dependencies"
+	"github.com/tongineers/tonbet-backend/internal/app/providers"
+	"github.com/tongineers/tonbet-backend/internal/repositories/bets"
+	"github.com/tongineers/tonbet-backend/internal/services/fetcher"
+	"github.com/tongineers/tonbet-backend/internal/services/listener"
+	"github.com/tongineers/tonbet-backend/internal/services/resolver"
+	"github.com/tongineers/tonbet-backend/internal/services/smartcont"
 )
 
 // Injectors from wire.go:
 
 func BuildApplication() (*Application, error) {
 	config := providers.ConfigProvider()
-	apiClient, err := smartcont.NewTonAPIClient(config)
+	service, err := smartcont.New(config)
 	if err != nil {
 		return nil, err
 	}
-	service := smartcont.New(apiClient, config)
 	db, err := providers.StoreProvider(config)
 	if err != nil {
 		return nil, err

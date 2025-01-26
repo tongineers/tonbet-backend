@@ -6,18 +6,17 @@ package app
 import (
 	"github.com/google/wire"
 
-	"github.com/tongineers/dice-ton-api/internal/app/dependencies"
-	"github.com/tongineers/dice-ton-api/internal/app/providers"
-	repository "github.com/tongineers/dice-ton-api/internal/repositories/bets"
-	"github.com/tongineers/dice-ton-api/internal/services/fetcher"
-	"github.com/tongineers/dice-ton-api/internal/services/listener"
-	"github.com/tongineers/dice-ton-api/internal/services/resolver"
-	"github.com/tongineers/dice-ton-api/internal/services/smartcont"
+	"github.com/tongineers/tonbet-backend/internal/app/dependencies"
+	"github.com/tongineers/tonbet-backend/internal/app/providers"
+	repository "github.com/tongineers/tonbet-backend/internal/repositories/bets"
+	"github.com/tongineers/tonbet-backend/internal/services/fetcher"
+	"github.com/tongineers/tonbet-backend/internal/services/listener"
+	"github.com/tongineers/tonbet-backend/internal/services/resolver"
+	"github.com/tongineers/tonbet-backend/internal/services/smartcont"
 )
 
 func BuildApplication() (*Application, error) {
 	wire.Build(
-
 		// Providers
 		providers.LogsProvider,
 		providers.ConfigProvider,
@@ -25,16 +24,14 @@ func BuildApplication() (*Application, error) {
 		providers.ServerProvider,
 		providers.StoreProvider,
 
-		// Repositories
-		repository.New,
-
-		smartcont.NewTonAPIClient,
-
 		// Services
+		smartcont.New,
 		listener.New,
 		resolver.New,
 		fetcher.New,
-		smartcont.New,
+
+		// Repositories
+		repository.New,
 
 		wire.Bind(new(listener.DiceContract), new(*smartcont.Service)),
 		wire.Bind(new(listener.Repository), new(*repository.Repository)),

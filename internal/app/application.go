@@ -3,9 +3,9 @@ package app
 import (
 	"context"
 
-	"github.com/tongineers/dice-ton-api/internal/app/dependencies"
-	"github.com/tongineers/dice-ton-api/internal/app/factories"
-	"github.com/tongineers/dice-ton-api/pkg/workerpool"
+	"github.com/tongineers/tonbet-backend/internal/app/dependencies"
+	"github.com/tongineers/tonbet-backend/internal/app/factories"
+	"github.com/tongineers/tonbet-backend/pkg/workerpool"
 )
 
 // Application is a main struct for the application that contains general information
