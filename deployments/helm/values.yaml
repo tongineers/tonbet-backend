@@ -1,0 +1,127 @@
+replicaCount: 1
+image:
+  repository: tongineers/tonbet-backend
+  tag: v0.0.1
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 5001
+resources:
+ingress:
+  enabled: false
+  path: /
+  hostName: "tonbet.io"
+  annotations: {}
+  tls: []
+
+imagePullSecrets: []
+
+env:
+  - name: APP_PORT
+    value: 5000
+  - name: APP_HTTP_PORT
+    value: 5001
+  - name: DB_HOST
+    value: tonbet-backend-postgres
+  - name: DB_PORT
+    value: 5432
+  - name: DB_NAME
+    valueFrom:
+      secretKeyRef:
+        name: db-secret
+        key: name
+  - name: DB_USER
+    valueFrom:
+      secretKeyRef:
+        name: db-secret
+        key: user
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: db-secret
+        key: password
+  - name: TON_LAST_TRANSACTION_LT
+    value: "28955831000003"
+  - name: TON_CONTRACT_ADDR
+    value: EQBdx6lPsOR_quNbfCZUiRgTIa08OosNaSUwnqhjkNFUzJSi
+  - name: TON_CONFIG_PATH
+    value: /var/opt/config/liteclient/testnet.json
+  - name: TON_SECRET_PATH
+    value: /var/opt/keys/secret.pk
+  - name: FIFTPATH
+    value: /usr/local/lib/fiftlib
+
+# config:
+#   app:
+#     port: 5000
+#     httpPort: 5001
+#   db:
+#     host: postgres-svc
+#     port: 5432
+#     name: xxx
+#     user: xxx
+#     password: xxx
+#   ton:
+#     contractAddr: EQBdx6lPsOR_quNbfCZUiRgTIa08OosNaSUwnqhjkNFUzJSi
+#     lastTransactionLt: 28955831000003
+#     configPath: /var/opt/config/liteclient/testnet.json
+#     secretPath: /var/opt/keys/secret.pk
+
+volumes:
+  - name: liteclient-config
+    hostPath:
+      path: /var/opt/config/liteclient/testnet.json
+      type: File
+  - name: secret-key
+    hostPath:
+      path: /var/opt/keys/secret.pk
+      type: File
+
+volumeMounts:
+  - name: liteclient-config
+    mountPath: /var/opt/config/liteclient/testnet.json
+  - name: secret-key
+    mountPath: /var/opt/keys/secret.pk
+
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+# # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+# service:
+#   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+#   type: ClusterIP
+#   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+#   port: 80
+
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80

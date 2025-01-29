@@ -2,4 +2,5 @@
 .idea/
 .postgres/
 .env
+**/secret.yaml
 *.boc

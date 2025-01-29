@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-volume
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOncePod
+  capacity:
+    storage: 10Gi
+  hostPath:
+    path: /data/postgresql
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-volume-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOncePod
+  resources:
+    requests:
+      storage: 3Gi
