@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -15,6 +16,7 @@ import (
 	"github.com/xssnick/tonutils-go/address"
 	"github.com/xssnick/tonutils-go/tlb"
 	"github.com/xssnick/tonutils-go/ton"
+	"github.com/xssnick/tonutils-go/ton/jetton"
 	"github.com/xssnick/tonutils-go/tvm/cell"
 
 	"github.com/tongineers/tonbet-backend/config"
@@ -52,6 +54,44 @@ func New(conf *config.Config) (*Service, error) {
 	return &Service{
 		api:  ton.NewAPIClient(client).WithRetry(),
 		conf: conf,
+	}, nil
+}
+
+// GetJettonData ...
+func (s *Service) GetJettonData(accountAddr string) (*models.JettonData, error) {
+	addr, err := address.ParseAddr("kQBn05wJBCpLHKWUfBfBWBtZfKXG-PzfzGfqsH7XItZvIAtA")
+	if err != nil {
+		return nil, err
+	}
+
+	master := jetton.NewJettonMasterClient(s.api, addr)
+
+	// get information about jetton
+	data, err := master.GetJettonData(context.Background())
+	if err != nil {
+		log.Println("error:", err)
+		return nil, err
+	}
+
+	log.Println("total supply:", data.TotalSupply.Uint64())
+
+	// get jetton wallet for account
+	ownerAddr := address.MustParseAddr(accountAddr)
+	jettonWallet, err := master.GetJettonWallet(context.Background(), ownerAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	jettonBalance, err := jettonWallet.GetBalance(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	log.Println("balance:", jettonBalance.String())
+
+	return &models.JettonData{
+		TotalSupply: data.TotalSupply.Int64(),
+		UserAddress: jettonWallet.Address().String(),
+		Balance:     jettonBalance.Int64(),
 	}, nil
 }
 

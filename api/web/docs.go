@@ -87,6 +87,33 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/jetton/{addr}": {
+            "get": {
+                "description": "get jetton",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get Jetton Data",
+                "operationId": "get-jetton",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account Address",
+                        "name": "addr",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
         }
     }
 }`

@@ -7,12 +7,14 @@ import (
 	"github.com/tongineers/tonbet-backend/internal/app/factories"
 	apiv1Account "github.com/tongineers/tonbet-backend/internal/gateways/web/controllers/apiv1/account"
 	apiv1Bets "github.com/tongineers/tonbet-backend/internal/gateways/web/controllers/apiv1/bets"
+	apiv1Jetton "github.com/tongineers/tonbet-backend/internal/gateways/web/controllers/apiv1/jetton"
 	"github.com/tongineers/tonbet-backend/internal/gateways/web/controllers/apiv1/swagger"
 )
 
 func RouterProvider(container *dependencies.Container) *gin.Engine {
 	return factories.RouterFactory(
 		apiv1Account.New(container.DiceContract, container.Logger),
+		apiv1Jetton.New(container.DiceContract, container.Logger),
 		apiv1Bets.New(container.Repository, container.Logger),
 		swagger.New(),
 	)

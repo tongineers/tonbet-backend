@@ -49,4 +49,22 @@ paths:
         "200":
           description: OK
       summary: Get Bets By Player Address
+  /api/v1/jetton/{addr}:
+    get:
+      consumes:
+      - application/json
+      description: get jetton
+      operationId: get-jetton
+      parameters:
+      - description: Account Address
+        in: path
+        name: addr
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Get Jetton Data
 swagger: "2.0"
